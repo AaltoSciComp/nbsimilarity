@@ -90,11 +90,12 @@ class Tfidf(Comparer):
 def main(argv=sys.argv[1:]):
     parser = argparse.ArgumentParser()
     parser.add_argument('--template', '-t')
+    parser.add_argument('--compare', '-c', default='Tfidf')
     #parser.add_argument('--template', '-t')
     parser.add_argument('notebooks', nargs='+')
     args = parser.parse_args(argv)
     #print(args)
-    comparer = Tfidf()
+    comparer = globals()[args.compare]()
 
     if args.template:
         comparer.template(read_file(args.template))
