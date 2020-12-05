@@ -9,8 +9,14 @@ import pycode_similar
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics.pairwise import cosine_similarity
 
-Student = namedtuple('Student', ['name', 'nb', 'doc', 'vec'],
-                     defaults=[None]*4)
+
+def read_file(nb):
+    if nb.endswith('.ipynb'):
+        with open(nb) as nbf:
+            t_nb = nbformat.read(nbf, 4)
+        return nb_to_doc(t_nb)
+    return(open(nb).read())
+
 
 def nb_to_doc(nb):
     data = [ ]
@@ -29,6 +35,58 @@ def nb_to_doc(nb):
     return nb
 
 
+class Comparer:
+    def __init__(self):
+        self.docs = [ ]
+        self.vecs = [ ]
+        self.has_template = False
+
+    def template(self, doc):
+        self.has_template = True
+        self.t_doc = doc
+        self.t_lines = self.t_doc.split('\n')
+
+    def filter_doc(self, doc):
+        if hasattr(self, 't_lines'):
+            # Remove lines in template
+            doc = '\n'.join(x for x in doc.split('\n') if x not in self.t_lines)
+        return doc
+
+
+class Tfidf(Comparer):
+
+    def add(self, doc):
+        doc = self.filter_doc(doc)
+        print(len(doc.split('\n')))
+        self.docs.append(doc)
+
+    def process(self):
+        docs = self.docs
+        if self.has_template:
+            docs = self.docs + [self.t_doc]
+        self.vecs = TfidfVectorizer().fit_transform(docs).toarray()
+        if self.has_template:
+        #print(vecs)
+            self.t_vec = self.vecs[-1]
+            self.vecs = self.vecs[:-1]
+
+    def sim_template(self):
+        sims = [ ]
+        for i in range(len(self.docs)):
+            s = cosine_similarity([self.t_vec, self.vecs[i]])[0][1]
+            sims.append((i, s, ''))
+        sims.sort(key=lambda x: x[1], reverse=True)
+        return sims
+
+    def sim_all(self):
+        sims = [ ]
+        for i in range(len(self.docs)):
+            for j in range(i+1, len(self.docs)):
+                s = cosine_similarity([self.vecs[i], self.vecs[j]])[0][1]
+                sims.append((i, j, s, ''))
+        sims.sort(key=lambda x: x[2], reverse=True)
+        return sims
+
 def main(argv=sys.argv[1:]):
     parser = argparse.ArgumentParser()
     parser.add_argument('--template', '-t')
@@ -36,54 +94,36 @@ def main(argv=sys.argv[1:]):
     parser.add_argument('notebooks', nargs='+')
     args = parser.parse_args(argv)
     #print(args)
+    comparer = Tfidf()
 
     if args.template:
-        with open(args.template) as nbf:
-            t_nb = nbformat.read(nbf, 4)
-            t_doc = nb_to_doc(t_nb)
-            #t_vec = TfidfVectorizer().fit_transform(t_doc).toarray()
+        comparer.template(read_file(args.template))
 
-    names = [ ]
-    nbs = [ ]
-    docs = [ ]
+    names = args.notebooks
+    names = filter(lambda x: not x.endswith('~'), names)
+    names = list(names)
 
-    for notebook in args.notebooks:
-        names.append(notebook)
-        with open(notebook) as nbf:
-            nb = nbformat.read(nbf, 4)
-            nbs.append(nb)
-        doc = nb_to_doc(nb)
-        docs.append(doc)
+    for notebook in names:
+        comparer.add(read_file(notebook))
 
-    vecs = TfidfVectorizer().fit_transform(docs + [t_doc]).toarray()
-    print(vecs)
-    t_vec = vecs[-1]
-    vecs = vecs[:-1]
 
         #print(nb)
 
     #results = pycode_similar.detect([t_doc, *docs], diff_method=pycode_similar.UnifiedDiff, keep_prints=False, module_level=False)
     #print(results)
 
-    print()
-    print("Compare to template")
-    for i in range(len(names)):
-        s = cosine_similarity([t_vec, vecs[i]])[0][1]
-        print(f"{names[i][-20:]:20}   {s:0.02}")
-        #print(s)
-        #print(names[i][-20:].rjust(20), s)
+    comparer.process()
+
+    if comparer.has_template:
+        print()
+        print("Compare to template")
+        sims = comparer.sim_template()
+        for i, s, desc in sims:
+            print(f"{names[i][-20:]:20}   {s:0.02}")
 
 
     print()
     print("Compare all students")
-    sims = [ ]
-    for i in range(len(names)):
-        for j in range(i+1, len(names)):
-            s = cosine_similarity([vecs[i], vecs[j]])[0][1]
-        sims.append((i, j, s))
-
-    sims.sort(key=lambda x: x[2], reverse=True)
-    for i, j, s in sims:
+    sims = comparer.sim_all()
+    for i, j, s, desc in sims:
         print(f"{names[i][-20:]:20}   {names[j][-20:]:20}   {s:0.02}")
-        #print(s)
-        #print(names[i][-20:].rjust(20), s)
