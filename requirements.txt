@@ -1,4 +1,5 @@
 nbformat
+nltk
 pandas
 pycode_similar
 scikit-learn
