@@ -1,13 +1,16 @@
-from ._version import __version__
-
 import argparse
-from collections import namedtuple
+import logging
+import os
 import sys
 
 import nbformat
 import pycode_similar
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics.pairwise import cosine_similarity
+
+from ._version import __version__
+
+LOG = logging.getLogger(__name__)
 
 
 def read_file(nb):
@@ -57,7 +60,7 @@ class Tfidf(Comparer):
 
     def add(self, doc):
         doc = self.filter_doc(doc)
-        print(len(doc.split('\n')))
+        LOG.debug('document length: %s', len(doc.split('\n')))
         self.docs.append(doc)
 
     def process(self):
@@ -92,9 +95,15 @@ def main(argv=sys.argv[1:]):
     parser.add_argument('--template', '-t')
     parser.add_argument('--compare', '-c', default='Tfidf')
     #parser.add_argument('--template', '-t')
+    parser.add_argument('--verbose', '-v', action='store_true')
     parser.add_argument('notebooks', nargs='+')
     args = parser.parse_args(argv)
     #print(args)
+
+    if args.verbose:
+        logging.basicConfig(level=logging.DEBUG)
+        #LOG.setLevel(logging.DEBUG)
+
     comparer = globals()[args.compare]()
 
     if args.template:
@@ -130,4 +139,4 @@ def main(argv=sys.argv[1:]):
         commonprefix = os.path.commonprefix([names[i], names[j]])
         name1 = names[i][len(commonprefix):]
         name2 = names[j][len(commonprefix):]
-        print(f"{name1[:20]:20}   {name2[:20]:20}   {s:0.02}      nbdiff -SD {names[i]} {names[j]} | less -R")
+        print(f"{name1[:20]:20}   {name2[:20]:20}   {s:0.02}      nbdiff -OD {names[i]} {names[j]} | less -R")
