@@ -8,23 +8,23 @@ with open("README.rst", "r") as fh:
     long_description = fh.read()
 
 version_ns = { }
-exec(open('nbplagarism/_version.py').read(), version_ns)
+exec(open('nbsimilarity/_version.py').read(), version_ns)
 version = version_ns['__version__']
 del version_ns
 
 requirementstxt = join(dirname(__file__), "requirements.txt")
 requirements = [ line.strip() for line in open(requirementstxt, "r") if line.strip() ]
 
-setuptools.setup(name='nbplagarism',
+setuptools.setup(name='nbsimilarity',
       version=version,
       description='Detect similarity in notebooks',
       long_description=long_description,
       long_description_content_type="text/x-rst",  # ReST is the default
       # long_description_content_type='text/markdown',
-      url="https://github.com/AaltoSciComp/nbplagarism",
+      url="https://github.com/AaltoSciComp/nbsimilarity",
       author='Richard Darst',
       #author_email='',
-      packages=['nbplagarism'],           # packages
+      packages=['nbsimilarity'],           # packages
       #package_data={
       #    "xxx": ['_static/*'],
       #    },
@@ -34,7 +34,7 @@ setuptools.setup(name='nbplagarism',
       install_requires=requirements,
       entry_points={
           'console_scripts': [
-                'nbplagarism=nbplagarism:main',
+                'nbsimilarity=nbsimilarity:main',
         ],
     },
       # https://pypi.org/classifiers/
