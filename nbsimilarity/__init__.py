@@ -127,4 +127,7 @@ def main(argv=sys.argv[1:]):
     print("Compare all students")
     sims = comparer.sim_all()
     for i, j, s, desc in sims:
-        print(f"{names[i][-20:]:20}   {names[j][-20:]:20}   {s:0.02}")
+        commonprefix = os.path.commonprefix([names[i], names[j]])
+        name1 = names[i][len(commonprefix):]
+        name2 = names[j][len(commonprefix):]
+        print(f"{name1[:20]:20}   {name2[:20]:20}   {s:0.02}      nbdiff -SD {names[i]} {names[j]} | less -R")
