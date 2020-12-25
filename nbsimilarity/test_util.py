@@ -24,3 +24,5 @@ def test_remove_common_parts():
     assert remove_common_parts(('ab123', '555cd')) == ('ab123', '555cd')
     assert remove_common_parts(('', '')) == ('', '')
     assert remove_common_parts(('abcd', 'abcd')) == ('', '')
+    assert remove_common_parts(('abbc', 'abc')) == ('b', '')
+    assert remove_common_parts(('abc', 'abbc')) == ('', 'b')
