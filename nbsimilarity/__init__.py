@@ -62,6 +62,7 @@ def common_prefix_length(x):
 
 
 class Comparer:
+    no_filter_lines = False
     def __init__(self):
         self.docs = [ ]
         self.vecs = [ ]
@@ -73,7 +74,7 @@ class Comparer:
         self.t_lines = self.t_doc.split('\n')
 
     def filter_doc(self, doc):
-        if hasattr(self, 't_lines'):
+        if hasattr(self, 't_lines') and not self.no_filter_lines:
             # Remove lines in template
             doc = '\n'.join(x for x in doc.split('\n') if x not in self.t_lines)
         return doc
@@ -112,6 +113,13 @@ class Tfidf(Comparer):
                 sims.append((i, j, s, ''))
         sims.sort(key=lambda x: x[2], reverse=True)
         return sims
+
+
+
+class PycodeSimilar(Comparer):
+    pass
+
+
 
 def main(argv=sys.argv[1:]):
     parser = argparse.ArgumentParser()
