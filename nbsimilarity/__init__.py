@@ -13,12 +13,14 @@ from ._version import __version__
 LOG = logging.getLogger(__name__)
 
 
+
 def read_file(nb):
     if nb.endswith('.ipynb'):
         with open(nb) as nbf:
             t_nb = nbformat.read(nbf, 4)
         return nb_to_doc(t_nb)
     return(open(nb).read())
+
 
 
 def nb_to_doc(nb):
@@ -36,6 +38,27 @@ def nb_to_doc(nb):
 
     #import IPython ; IPython.embed()
     return nb
+
+
+def reversed_string(x):
+    return ''.join(reversed(x))
+
+def remove_common_parts(x):
+    i = common_prefix_length(x)
+    x = tuple(a[i:] for a in x)
+    i = common_prefix_length(tuple(reversed_string(a) for a in x))
+    x = tuple(a[:-i] if i!=0 else a for a in x)
+    return x
+
+def common_prefix_length(x):
+    x = tuple(x)  # ensure we can iterate multiple times
+    first = min(x)
+    last = max(x)
+    for i in range(len(first)):
+        if first[:i] != last[:i]:
+            return i - 1
+    return len(first)
+
 
 
 class Comparer:
@@ -128,15 +151,14 @@ def main(argv=sys.argv[1:]):
         print()
         print("Compare to template")
         sims = comparer.sim_template()
+        names_short = remove_common_parts(names)
         for i, s, desc in sims:
-            print(f"{names[i][-20:]:20}   {s:0.02}")
+            print(f"{names_short[i][-15:]:15}  {s:0.02}")
 
 
     print()
     print("Compare all students")
     sims = comparer.sim_all()
     for i, j, s, desc in sims:
-        commonprefix = os.path.commonprefix([names[i], names[j]])
-        name1 = names[i][len(commonprefix):]
-        name2 = names[j][len(commonprefix):]
-        print(f"{name1[:20]:20}   {name2[:20]:20}   {s:0.02}      nbdiff -OD {names[i]} {names[j]} | less -R")
+        name1, name2 = remove_common_parts((names[i], names[j]))
+        print(f"{name1[:15]:15}  {name2[:15]:15}  {s:0.02}      nbdiff -OD {names[i]} {names[j]} | less -R")
