@@ -90,13 +90,30 @@ far), so everything you read below should be improved later.
 * Output prints to the console, and prints `nbdiff`-command lines that
   you can copy and paste to another terminal to look at the actual
   diff and use your judgement about what to do.
-* Right now it prints all 
+* Right now it prints all similarities between all inputs to the
+  console.
 * Comparison functions should be pluggable, and selectable with
   `--compare`. Right now comparers are:
   * `Tfidf`: Some tf-idf tool based on word tokens (not code) 
   * `PycodeSimilar`: Something using
     [pycode-similar](https://pypi.org/project/pycode-similar/)
 * There is a filtering layer.
+* Internally, the processing is done in several rounds: first, some
+  processing is done on every input.  Then, some overall processing
+  can be done - ideally with a low computational complexity with a
+  clever method, but worst case it has to do things pairwise.  Then
+  similarities are sorted and compared pairwise.
+
+
+About pycode-similar:
+
+* This was one of the few available syntax-level code similarity
+  libraries I could find - please point me to more!
+* It is being used very naively, so it runs pairwise on all inputs.  I
+  *think* it can be made to compare all inputs at once, but I didn't
+  have time to figure that out.
+* It also isn't fully tested, since I ran out of the time of the step
+  above, so it couldn't be finished.
 
 
 
